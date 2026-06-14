@@ -8,7 +8,7 @@ import {
 // Or relative paths since Vite proxies/serves the build.
 // Under Render, the React build can be served on the same domain as the Flask API,
 // meaning relative paths like /api are ideal.
-const API_BASE_URL = '/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const apiInstance = axios.create({
   baseURL: API_BASE_URL,
@@ -32,7 +32,7 @@ apiInstance.interceptors.request.use((config) => {
 // (the standard container handles port 3000 as a single process for Vite dev server),
 // we use a transparent Local Mock fallback. It mimics the Axios requests but acts on our localStorage database.
 // This guarantees that the user can register, login, click buttons, search, and edit records instantly in the frame.
-const IS_PREVIEW_ENV = true; // Set to true to bypass backend errors and make the preview fully interactive
+const IS_PREVIEW_ENV = false; // Set to true to bypass backend errors and make the preview fully interactive
 
 export const api = {
   // Authentication
