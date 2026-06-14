@@ -8,17 +8,62 @@ import {
 // Or relative paths since Vite proxies/serves the build.
 // Under Render, the React build can be served on the same domain as the Flask API,
 // meaning relative paths like /api are ideal.
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+export const apiConfig = {
+  getIsPreviewEnv: () => {
+    const savedMock = localStorage.getItem('pms_use_mock_db');
+    if (savedMock !== null) {
+      return savedMock === 'true';
+    }
+    if (typeof window !== 'undefined') {
+      const host = window.location.hostname;
+      if (
+        host === 'localhost' || 
+        host === '127.0.0.1' || 
+        host.includes('asia-east1.run.app') || 
+        host.includes('google.app')
+      ) {
+        return true;
+      }
+    }
+    return false;
+  },
+  setUseMockDb: (val: boolean) => {
+    localStorage.setItem('pms_use_mock_db', String(val));
+    IS_PREVIEW_ENV = val;
+  },
+  getApiBaseUrl: () => {
+    const metaEnv = (import.meta as any).env;
+    if (metaEnv && metaEnv.VITE_API_URL) return metaEnv.VITE_API_URL;
+    const savedUrl = localStorage.getItem('pms_custom_api_url');
+    if (savedUrl) return savedUrl;
+    if (typeof window !== 'undefined') {
+      const origin = window.location.origin;
+      if (origin.includes('onrender.com')) {
+        if (origin.includes('-frontend')) {
+          return origin.replace('-frontend', '-backend') + '/api';
+        }
+        if (origin.includes('-client')) {
+          return origin.replace('-client', '-api') + '/api';
+        }
+      }
+      return `${origin}/api`;
+    }
+    return '/api';
+  },
+  setApiBaseUrl: (url: string) => {
+    localStorage.setItem('pms_custom_api_url', url);
+  }
+};
 
 const apiInstance = axios.create({
-  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json'
   }
 });
 
-// Automatically inject JWT token into requests if available
+// Automatically inject JWT token and dynamically resolve API Base URL
 apiInstance.interceptors.request.use((config) => {
+  config.baseURL = apiConfig.getApiBaseUrl();
   const token = localStorage.getItem('pms_auth_token');
   if (token && config.headers) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -28,11 +73,8 @@ apiInstance.interceptors.request.use((config) => {
   return Promise.reject(error);
 });
 
-// Since we are running in the AI Studio preview environment without a running Python backend process
-// (the standard container handles port 3000 as a single process for Vite dev server),
-// we use a transparent Local Mock fallback. It mimics the Axios requests but acts on our localStorage database.
-// This guarantees that the user can register, login, click buttons, search, and edit records instantly in the frame.
-const IS_PREVIEW_ENV = false; // Set to true to bypass backend errors and make the preview fully interactive
+// Toggle preview mode based on config
+export let IS_PREVIEW_ENV = apiConfig.getIsPreviewEnv();
 
 export const api = {
   // Authentication

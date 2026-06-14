@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { api } from '../services/api';
+import { api, apiConfig } from '../services/api';
 import { User } from '../types';
-import { Stethoscope, Lock, User as UserIcon, AlertCircle, Info } from 'lucide-react';
+import { Stethoscope, Lock, User as UserIcon, AlertCircle, Info, Globe, Database, Wifi, WifiOff, Cpu } from 'lucide-react';
 
 interface LoginProps {
   onLoginSuccess: (user: User) => void;
@@ -15,6 +15,20 @@ export default function Login({ onLoginSuccess }: LoginProps) {
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [forgotUsername, setForgotUsername] = useState('');
   const [forgotSent, setForgotSent] = useState(false);
+  const [isMockActive, setIsMockActive] = useState(apiConfig.getIsPreviewEnv());
+  const [apiUrl, setApiUrl] = useState(apiConfig.getApiBaseUrl());
+  const [showConfig, setShowConfig] = useState(false);
+
+  const handleToggleMockMode = (checked: boolean) => {
+    apiConfig.setUseMockDb(checked);
+    setIsMockActive(checked);
+    setError(null);
+  };
+
+  const handleApiUrlChange = (val: string) => {
+    apiConfig.setApiBaseUrl(val);
+    setApiUrl(val);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -155,6 +169,61 @@ export default function Login({ onLoginSuccess }: LoginProps) {
                 <span>Receptionist</span>
               </button>
             </div>
+          </div>
+
+          {/* NETWORKING & MODE SETTINGS */}
+          <div className="border-t border-white/40 pt-4 mt-3 space-y-3">
+            <div className="flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => setShowConfig(!showConfig)}
+                className="text-[10px] font-bold text-slate-505 uppercase tracking-widest hover:text-blue-600 flex items-center gap-1 transition-all cursor-pointer"
+              >
+                <Globe className="w-3.5 h-3.5" />
+                <span>Connection Settings</span>
+                <span className="text-[9px] text-slate-400 font-normal">({isMockActive ? 'Demo Mode' : 'Server Live'})</span>
+              </button>
+              
+              <button
+                type="button"
+                onClick={() => handleToggleMockMode(!isMockActive)}
+                className={`text-[9px] font-bold px-2.5 py-1 rounded-lg border transition-all cursor-pointer ${
+                  isMockActive 
+                    ? 'bg-blue-50/70 border-blue-200/40 text-blue-700 hover:bg-blue-100/50' 
+                    : 'bg-emerald-50/70 border-emerald-200/40 text-emerald-700 hover:bg-emerald-100/50'
+                }`}
+              >
+                {isMockActive ? 'Switch to Server' : 'Switch to Demo DB'}
+              </button>
+            </div>
+
+            {isMockActive ? (
+              <div className="bg-blue-50/50 border border-blue-100/20 rounded-xl p-3 text-[11px] text-blue-800 leading-relaxed font-medium flex items-start gap-2 backdrop-blur-xs">
+                <Database className="w-4 h-4 shrink-0 mt-0.5 text-blue-500" />
+                <div>
+                  <span className="font-bold">Offline Demo Database</span> is active. All clinics, physicians, patients, prescriptions, and reports run locally.
+                </div>
+              </div>
+            ) : (
+              <div className="bg-emerald-50/50 border border-emerald-100/20 rounded-xl p-3 text-[11px] text-emerald-800 leading-relaxed font-medium flex items-start gap-2 backdrop-blur-xs">
+                <Wifi className="w-4 h-4 shrink-0 mt-0.5 text-emerald-600 animate-pulse" />
+                <div className="w-full space-y-1.5">
+                  <div>
+                    <span className="font-bold">Flask Backend database</span> connection active. Routing API sync requests to:
+                  </div>
+                  <input
+                    type="text"
+                    value={apiUrl}
+                    onChange={(e) => handleApiUrlChange(e.target.value)}
+                    placeholder="E.g. https://clinix-pms-backend.onrender.com/api"
+                    className="w-full px-2.5 py-1.5 bg-white/80 border border-slate-200/50 rounded-lg text-[10px] font-mono focus:ring-1 focus:ring-emerald-200 focus:outline-none transition-all text-slate-800 placeholder-slate-400"
+                  />
+                  <div className="text-[9px] text-slate-500 font-semibold italic leading-snug">
+                    Note: Render free services sleep after 15m of inactivity. Initial server wakeup can take 45-60s!
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </form>
       </div>

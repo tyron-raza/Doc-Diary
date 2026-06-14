@@ -1,4 +1,4 @@
-# Patient Management System (Doc Diary)
+# Patient Management System (Clinix Manager)
 
 A production-ready, highly polished full-stack Patient Management System designed for medical clinics. 
 
