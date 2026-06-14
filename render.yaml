@@ -25,11 +25,7 @@ services:
       - type: rewrite
         source: /*
         destination: /index.html
-    headers:
-      - path: /*
-        headers:
-          - key: Cache-Control
-            value: no-cache, no-store, must-revalidate
+
 
 databases:
   # 3. Dedicated Render PostgreSQL Database
