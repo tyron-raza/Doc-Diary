@@ -2,7 +2,5 @@
   "name": "Patient Management System",
   "description": "A modern, responsive, and secure Patient Management System for medical doctors to manage patients, schedule appointments, view calendar, write prescriptions, and generate invoices.",
   "requestFramePermissions": [],
-  "majorCapabilities": [
-    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
-  ]
+  "majorCapabilities": []
 }
